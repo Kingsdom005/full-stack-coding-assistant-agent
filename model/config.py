@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 # 加载 .env 文件中的环境变量
-load_dotenv()
+load_dotenv(override=True)  # 允许 .env 覆盖系统环境变量
 
 
 def get_env(key: str, default: str = "") -> str:

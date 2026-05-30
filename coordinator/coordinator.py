@@ -106,12 +106,6 @@ class Coordinator:
             所有任务的执行结果
         """
         results = {}
-        task_mapping = {
-            f"{main_task_id}_backend": "backend",
-            f"{main_task_id}_frontend": "frontend",
-            f"{main_task_id}_test": "test",
-            f"{main_task_id}_audit": "audit",
-        }
 
         # DAG 调度循环
         while not self.dag.is_completed():
