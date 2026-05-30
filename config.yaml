@@ -1,0 +1,26 @@
+# 全栈代码助手智能体配置
+
+coordinator:
+  max_retries: 3
+  timeout_seconds: 300
+
+agents:
+  frontend:
+    model: hunyuan-lite
+    max_tokens: 4096
+  backend:
+    model: hunyuan-standard
+    max_tokens: 4096
+  test:
+    model: hunyuan-lite
+    max_tokens: 2048
+  audit:
+    model: hunyuan-pro
+    max_tokens: 2048
+
+database:
+  path: "./context.db"
+
+codebuddy:
+  cli_path: "codebuddy"
+  timeout: 60
