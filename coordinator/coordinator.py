@@ -16,11 +16,19 @@ from agents.audit_agent import AuditAgent
 class Coordinator:
     """主协调器"""
 
-    def __init__(self, config_path: str = "config.yaml"):
+    def __init__(self, config_path: str = "config.yaml", db_path: Optional[str] = None):
+        """
+        初始化协调器
+
+        Args:
+            config_path: 配置文件路径
+            db_path: 数据库路径，None 则使用配置文件中的默认值
+        """
         # 初始化核心组件
         self.model_router = ModelRouter()
-        self.db = ContextDB()
+        self.db = ContextDB(db_path)  # 支持自定义数据库路径
         self.dag = DAGScheduler()
+        self.config_path = config_path
 
         # 初始化 Agents
         self.agents = {

@@ -5,32 +5,41 @@ CodeBuddy CLI 集成模块
 
 import subprocess
 import json
-from typing import Dict, Optional
+import tempfile
+import os
+from typing import Dict, Optional, List
+from model.config import CODEBUDDY_CONFIG
 
 
 class CodeBuddyExecutor:
     """CodeBuddy CLI 执行器（静态方法）"""
 
     @staticmethod
-    def _run_cli(command: str, args: list, timeout: int = 60) -> Dict:
+    def _run_cli(command: str, args: List[str], timeout: Optional[int] = None) -> Dict:
         """
         执行 CodeBuddy CLI 命令
 
         Args:
             command: CLI 命令（如 apply-edit, run-code）
             args: 命令参数列表
-            timeout: 超时时间（秒）
+            timeout: 超时时间（秒），None 则使用配置文件中的默认值
 
         Returns:
             执行结果字典
         """
-        cmd = ["codebuddy", command] + args
+        # 使用配置文件中的 CLI 路径
+        cli_path = CODEBUDDY_CONFIG["cli_path"]
+        cmd = [cli_path, command] + args
+
+        # 使用配置文件中的超时时间或传入的参数
+        actual_timeout = timeout or CODEBUDDY_CONFIG["timeout"]
+
         try:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=timeout,
+                timeout=actual_timeout,
             )
             return {
                 "success": result.returncode == 0,
@@ -41,12 +50,12 @@ class CodeBuddyExecutor:
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "error": f"命令超时（{timeout}秒）",
+                "error": f"命令超时（{actual_timeout}秒）",
             }
         except FileNotFoundError:
             return {
                 "success": False,
-                "error": "CodeBuddy CLI 未安装或不在 PATH 中",
+                "error": f"CodeBuddy CLI 未找到: {cli_path}",
             }
 
     @staticmethod

@@ -7,13 +7,20 @@ import sqlite3
 import json
 from typing import Optional, List, Dict
 from datetime import datetime
+from model.config import DATABASE_CONFIG
 
 
 class ContextDB:
     """SQLite 上下文数据库操作类"""
 
-    def __init__(self, db_path: str = "./context.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        """
+        初始化数据库
+
+        Args:
+            db_path: 数据库路径，None 则使用配置文件中的默认值
+        """
+        self.db_path = db_path or DATABASE_CONFIG["path"]
         self._init_db()
 
     def _init_db(self):
