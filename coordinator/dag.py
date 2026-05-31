@@ -73,8 +73,21 @@ class DAGScheduler:
             self.in_degree[downstream] -= 1
 
     def mark_failed(self, task_id: str):
-        """标记任务失败"""
+        """标记任务失败，并级联标记所有下游任务为失败"""
         self.status[task_id] = "failed"
+        # 级联标记所有下游任务为失败，避免死锁
+        self._cascade_failure(task_id)
+
+    def _cascade_failure(self, task_id: str):
+        """递归标记所有下游任务为失败（BFS 遍历）"""
+        from collections import deque
+        queue = deque([task_id])
+        while queue:
+            current = queue.popleft()
+            for downstream in self.graph.get(current, []):
+                if self.status[downstream] not in ("completed", "failed"):
+                    self.status[downstream] = "failed"
+                    queue.append(downstream)
 
     def is_completed(self) -> bool:
         """检查所有任务是否已完成"""
@@ -119,3 +132,16 @@ class DAGScheduler:
                     queue.append(downstream)
 
         return order
+
+    def reset(self):
+        """
+        清空 DAG 所有状态，用于迭代模式下重新提交任务
+
+        保留已完成的任务结果不清除（由 Coordinator 管理上下文），
+        此处仅清空调度相关状态。
+        """
+        self.graph.clear()
+        self.in_degree.clear()
+        self.tasks.clear()
+        # status 使用 defaultdict，清空需要重新初始化
+        self.status = defaultdict(lambda: "pending")

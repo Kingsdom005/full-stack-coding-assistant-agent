@@ -8,22 +8,22 @@ coordinator:
 
 agents:
   frontend:
-    model: hunyuan-lite
+    model: openai/hunyuan-lite
     max_tokens: 4096
     temperature: 0.3
     timeout: 60
   backend:
-    model: hunyuan-standard
+    model: openai/hunyuan-standard
     max_tokens: 4096
     temperature: 0.3
     timeout: 60
   test:
-    model: hunyuan-lite
+    model: openai/hunyuan-lite
     max_tokens: 2048
     temperature: 0.2
     timeout: 60
   audit:
-    model: hunyuan-pro
+    model: openai/hunyuan-pro
     max_tokens: 2048
     temperature: 0.1
     timeout: 120

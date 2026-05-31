@@ -3,7 +3,9 @@
 异步执行安全扫描、代码质量检查
 """
 
+import json
 import re
+from datetime import datetime
 from typing import Dict, List
 from agents.base_agent import BaseAgent
 
@@ -20,6 +22,7 @@ class AuditAgent(BaseAgent):
 4. 生成结构化审计报告
 
 输出格式（JSON）：
+每个问题一行 JSON 对象，包含字段：
 {
   "severity": "high|medium|low",
   "category": "安全|质量|性能",
@@ -28,6 +31,9 @@ class AuditAgent(BaseAgent):
   "line_number": 可选的行号
 }
 """
+
+    def _get_sub_dir(self) -> str:
+        return "audits"
 
     def execute(self, task_id: str, context: Dict) -> Dict:
         """
@@ -38,6 +44,7 @@ class AuditAgent(BaseAgent):
         2. 调用 LLM 进行审计
         3. 解析审计结果
         4. 保存到数据库
+        5. 将审计报告写入文件系统
         """
         # 1. 获取待审计代码
         code = context.get("code", "")
@@ -48,6 +55,7 @@ class AuditAgent(BaseAgent):
             return {"status": "skipped", "reason": "no code to audit"}
 
         # 2. 调用 LLM 审计
+        system_prompt = self.get_system_prompt()
         prompt = f"""请审计以下代码，找出安全漏洞和代码质量问题：
 
 ## 代码
@@ -83,39 +91,94 @@ class AuditAgent(BaseAgent):
                 line_number=report.get("line_number"),
             )
 
-        # 5. 返回结果
+        # 5. 将审计报告写入文件系统
+        audit_md = self._format_audit_report(reports, file_path, audit_result)
+        audit_filename = f"audits/audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        self._write_file(audit_filename, audit_md)
+
+        # 6. 返回结果
         result = {
             "status": "success",
             "reports_count": len(reports),
             "high_severity": sum(1 for r in reports if r.get("severity") == "high"),
             "reports": reports,
+            "audit_file": audit_filename,
         }
         self._save_result(task_id, str(result))
 
+        # 7. 保存 Agent 执行 trace（完整 I/O 审计）
+        self._save_trace(
+            task_id=task_id,
+            system_prompt=system_prompt,
+            user_prompt=prompt,
+            llm_response=audit_result,
+            parsed_result=result,
+        )
+
         return result
+
+    def _format_audit_report(
+        self, reports: List[Dict], file_path: str, raw_result: str
+    ) -> str:
+        """将审计结果格式化为 Markdown 报告"""
+        lines = [
+            f"# 代码审计报告",
+            "",
+            f"- 审计时间: {datetime.now().isoformat()}",
+            f"- 审计文件: {file_path}",
+            f"- 发现问题数: {len(reports)}",
+            "",
+            "## 问题列表",
+            "",
+        ]
+        for i, r in enumerate(reports, 1):
+            lines.append(
+                f"### {i}. [{r.get('severity', 'low').upper()}] {r.get('category', '未知')}"
+            )
+            lines.append(f"- **描述**: {r.get('message', '')}")
+            lines.append(f"- **建议**: {r.get('suggestion', '')}")
+            if r.get("line_number"):
+                lines.append(f"- **行号**: {r.get('line_number')}")
+            lines.append("")
+
+        lines += ["## 原始审计输出", "", "```", raw_result, "```", ""]
+        return "\n".join(lines)
 
     def _parse_audit_result(self, audit_text: str) -> List[Dict]:
         """
         解析 LLM 返回的审计结果
-        支持两种格式：
-        1. 每行一个 JSON 对象
-        2. 代码块中的 JSON 数组
+        支持多种格式：
+        1. ```json 代码块中的 JSON 数组或对象
+        2. 裸 JSON 数组 [{{}}, {{}}]
+        3. 每行一个 JSON 对象
         """
         reports = []
 
-        # 尝试解析代码块中的 JSON
-        json_match = re.search(r"```json(.*?)```", audit_text, re.DOTALL)
+        # 尝试 1: json 代码块（支持 ```json 和 ``` 两种格式）
+        json_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", audit_text, re.DOTALL)
         if json_match:
             try:
                 data = json.loads(json_match.group(1).strip())
                 if isinstance(data, list):
-                    return data
+                    return [r for r in data if isinstance(r, dict)]
                 elif isinstance(data, dict):
                     return [data]
             except json.JSONDecodeError:
                 pass
 
-        # 尝试逐行解析 JSON
+        # 尝试 2: 裸 JSON 数组或对象（整个文本就是 JSON）
+        stripped = audit_text.strip()
+        if stripped.startswith("[") or stripped.startswith("{"):
+            try:
+                data = json.loads(stripped)
+                if isinstance(data, list):
+                    return [r for r in data if isinstance(r, dict)]
+                elif isinstance(data, dict):
+                    return [data]
+            except json.JSONDecodeError:
+                pass
+
+        # 尝试 3: 逐行解析 JSON 对象
         for line in audit_text.split("\n"):
             line = line.strip()
             if not line or not line.startswith("{"):

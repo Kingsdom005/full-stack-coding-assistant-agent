@@ -21,6 +21,11 @@ class BackendAgent(BaseAgent):
 4. 确保代码的安全性、性能和可维护性
 
 输出格式要求：
+- 每个文件用 ### FILE: 标记，格式如下：
+  ### FILE: backend/main.py
+  ```python
+  # code here
+  ```
 - 代码必须可直接运行
 - API 接口必须包含完整的请求/响应 Schema
 - 在代码注释中标注 API 契约信息（endpoint, method, request_schema, response_schema）
@@ -31,11 +36,12 @@ class BackendAgent(BaseAgent):
         执行后端开发任务
 
         流程：
-        1. 检查依赖（可能需要前端 Agent 的 UI 需求）
-        2. 调用 LLM 生成后端代码
-        3. 提取 API 契约并保存到数据库
-        4. 更新任务状态
-        5. 通知审计 Agent（异步）
+        1. 检查依赖
+        2. 如果是迭代模式，读取已有代码注入 prompt
+        3. 调用 LLM 生成后端代码
+        4. 解析多文件输出并写入文件系统
+        5. 提取 API 契约并保存到数据库
+        6. 更新任务状态
         """
         # 1. 检查依赖
         if not self._check_dependencies(context, ["description"]):
@@ -43,8 +49,9 @@ class BackendAgent(BaseAgent):
 
         description = context["description"]
         requirements = context.get("requirements", "")
+        is_iteration = context.get("is_iteration", False)
 
-        # 2. 调用 LLM 生成代码
+        # 2. 构建 prompt
         prompt = f"""请根据以下需求生成后端代码：
 
 ## 需求描述
@@ -52,12 +59,31 @@ class BackendAgent(BaseAgent):
 
 ## 详细要求
 {requirements}
+"""
 
-请生成完整的后端代码，包括：
-1. API 路由定义
-2. 数据模型
-3. 业务逻辑
-4. 错误处理
+        # 迭代模式：注入已有代码
+        if is_iteration:
+            existing_code = self._collect_existing_code()
+            if existing_code:
+                prompt += f"""
+## 已有代码（请基于以下代码进行修改，不要重复生成已有文件）
+{existing_code}
+
+重要：请只输出需要新增或修改的文件，不要重复输出未修改的文件。
+"""
+
+        prompt += """
+请生成完整的后端代码，每个文件用 ### FILE: 标记，格式如下：
+
+### FILE: backend/main.py
+```python
+# code here
+```
+
+### FILE: backend/api.py
+```python
+# code here
+```
 
 在代码中用注释标注 API 契约，格式如下：
 ### API_CONTRACT_START
@@ -67,9 +93,24 @@ request_schema: {{...}}
 response_schema: {{...}}
 ### API_CONTRACT_END
 """
+
+        # 3. 调用 LLM 生成代码
+        system_prompt = self.get_system_prompt()
         code_result = self._call_llm(prompt, temperature=0.3)
 
-        # 3. 提取 API 契约
+        # 4. 解析多文件输出并写入文件系统
+        files = self._parse_llm_code_output(code_result)
+        change_type = "update" if is_iteration else "create"
+        for file_path, content in files.items():
+            self._write_file(file_path, content)
+            self._log_change(
+                task_id=task_id,
+                file_path=file_path,
+                change_type=change_type,
+                diff=content,
+            )
+
+        # 5. 提取 API 契约
         contracts = self._extract_api_contracts(code_result)
         for contract in contracts:
             self.db.save_api_contract(
@@ -81,20 +122,21 @@ response_schema: {{...}}
                 created_by="backend",
             )
 
-        # 4. 记录代码变更
-        self._log_change(
-            task_id=task_id,
-            file_path="backend/generated_code.py",
-            change_type="create",
-            diff=code_result,
-        )
-
-        # 5. 保存结果
+        # 6. 保存结果
         result = {
             "status": "success",
-            "code": code_result,
+            "files": list(files.keys()),
             "contracts": contracts,
         }
+
+        # 7. 保存 Agent 执行 trace（完整 I/O 审计）
+        self._save_trace(
+            task_id=task_id,
+            system_prompt=system_prompt,
+            user_prompt=prompt,
+            llm_response=code_result,
+            parsed_result=result,
+        )
         self._save_result(task_id, json.dumps(result))
 
         return result

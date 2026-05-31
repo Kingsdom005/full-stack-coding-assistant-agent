@@ -24,8 +24,8 @@ fi
 echo "[2/5] 检查 Python 版本..."
 PYTHON_VERSION=$(python --version 2>&1)
 echo "  $PYTHON_VERSION"
-if [[ ! "$PYTHON_VERSION" =~ 3\.11 ]]; then
-    echo "  警告: 建议使用 Python 3.11"
+if [[ ! "$PYTHON_VERSION" =~ 3\.13 ]]; then
+    echo "  警告: 建议使用 Python 3.13"
 fi
 
 # 3. 检查依赖
@@ -58,12 +58,28 @@ echo "[5/5] 启动项目..."
 echo "============================================================"
 echo ""
 
-# 运行项目
+# 运行项目（所有参数原样传递给 main.py）
+# 用法:
+#   首次运行: ./run.sh "任务描述" [-r "详细需求"]
+#   迭代运行: ./run.sh --continue output/xxx/ "新增需求"
 if [ $# -eq 0 ]; then
-    echo "用法: ./run.sh '任务描述' ['详细需求']"
+    echo "用法: ./run.sh [选项]"
     echo ""
     echo "示例:"
-    echo "  ./run.sh '开发一个用户登录功能' '包含前后端实现'"
+    echo "  ./run.sh '开发一个用户登录功能'"
+    echo "  ./run.sh --pdf spec.pdf '开发一个后台管理系统'"
+    echo "  ./run.sh --pdf spec.pdf                        # 纯 PDF 描述"
+    echo "  ./run.sh --continue output/xxx/ '增加验证码'"
+    echo "  ./run.sh --continue output/xxx/ --pdf new.pdf  # 迭代+PDF"
+    echo ""
+    echo "选项:"
+    echo "  -p, --pdf FILE       PDF 需求文档"
+    echo "  -r, --requirements   详细需求"
+    echo "  -c, --continue DIR   基于已有项目迭代"
+    echo ""
+    echo "交互模式命令:"
+    echo "  load <文件>          加载 PDF/TXT/MD 文档作为需求"
+    echo "  exit, quit, bye      退出"
     exit 1
 fi
 

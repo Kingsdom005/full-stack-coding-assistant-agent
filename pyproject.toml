@@ -30,7 +30,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agents*", "coordinator*", "model*", "storage*", "executor*"]
+include = ["agents*", "coordinator*", "model*", "storage*", "executor*", "utils*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+minversion = "7.0"
+addopts = "-v --tb=short"
 
 [tool.black]
 line-length = 88
@@ -46,3 +51,13 @@ python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[tool.coverage.run]
+source = ["."]
+omit = ["tests/*", ".codebuddy/*", "output/*", "dataset/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
