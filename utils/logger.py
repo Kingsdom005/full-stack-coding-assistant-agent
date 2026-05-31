@@ -3,9 +3,8 @@
 支持 Python 3.13+ 的最新日志特性
 """
 
-import os
 import logging
-from datetime import datetime
+import os
 from typing import Optional
 
 

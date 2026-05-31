@@ -3,7 +3,8 @@
 负责生成前端组件代码，并根据后端 API 契约调整接口调用
 """
 
-from typing import Dict, List
+from typing import Dict
+
 from agents.base_agent import BaseAgent
 
 

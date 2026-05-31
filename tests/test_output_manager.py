@@ -4,8 +4,10 @@
 
 import json
 import tempfile
-import pytest
 from pathlib import Path
+
+import pytest
+
 from utils.output_manager import OutputManager
 
 

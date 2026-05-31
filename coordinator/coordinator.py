@@ -2,18 +2,17 @@
 主协调器 - 负责任务拆解、调度和上下文管理
 """
 
-import json
 import uuid
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from agents.audit_agent import AuditAgent
+from agents.backend_agent import BackendAgent
+from agents.frontend_agent import FrontendAgent
+from agents.test_agent import TestAgent
 from coordinator.dag import DAGScheduler
 from model.model_router import ModelRouter
 from storage.context_db import ContextDB
-from agents.frontend_agent import FrontendAgent
-from agents.backend_agent import BackendAgent
-from agents.test_agent import TestAgent
-from agents.audit_agent import AuditAgent
 
 
 class Coordinator:
@@ -285,6 +284,7 @@ class Coordinator:
 
                 except Exception as e:
                     import traceback
+
                     from utils.logger import error as log_error
 
                     error_detail = traceback.format_exc()

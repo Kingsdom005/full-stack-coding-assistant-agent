@@ -3,8 +3,8 @@ DAG 调度器 - 管理任务依赖关系
 实现有向无环图的任务编排
 """
 
-from typing import Dict, List, Set, Optional
 from collections import defaultdict, deque
+from typing import Dict, List, Optional
 
 
 class DAGScheduler:

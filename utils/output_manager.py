@@ -5,7 +5,6 @@
 
 import json
 import re
-import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -919,7 +918,7 @@ class OutputManager:
                 "### 1.1 安装依赖",
                 "",
                 "```bash",
-                f"cd backend/",
+                "cd backend/",
             ]
             if deps:
                 lines.append(f"pip install {' '.join(deps)}")
@@ -1024,7 +1023,8 @@ class OutputManager:
                 "",
                 "```bash",
                 "# 将组件和入口文件移入 src/（如果尚未在 src/ 中）",
-                "find . -maxdepth 1 -name '*.tsx' -o -name '*.ts' -o -name '*.css' | grep -v 'node_modules' | xargs -I{} mv {} src/ 2>/dev/null",
+                "find . -maxdepth 1 -name '*.tsx' -o -name '*.ts' \\",
+                "  -o -name '*.css' | grep -v 'node_modules' | xargs -I{} mv {} src/ 2>/dev/null",
                 "```",
                 "",
                 "### 2.3 启动开发服务器",
@@ -1081,8 +1081,8 @@ class OutputManager:
                     "可以直接用浏览器打开 HTML 文件，或使用简单 HTTP 服务器：",
                     "",
                     "```bash",
-                    f"cd frontend/",
-                    f"python -m http.server 8000",
+                    "cd frontend/",
+                    "python -m http.server 8000",
                     "```",
                     f"浏览器访问: `http://localhost:8000/{entry_html.name}`",
                     "",
@@ -1148,7 +1148,7 @@ class OutputManager:
                     "### 3.2 前端测试",
                     "",
                     "```bash",
-                    f"cd frontend/",
+                    "cd frontend/",
                     f"{pkg_mgr} test",
                     "```",
                     "",
@@ -1164,7 +1164,7 @@ class OutputManager:
                     "> ⚠️ **缺少 `frontend/package.json`**，前端测试无法直接运行。",
                     "> 请先初始化前端项目（参见 README 中'运行前端'章节），然后：",
                     "",
-                    f"**测试文件**（位于 `tests/` 目录，需移到 `frontend/src/` 下运行）:",
+                    "**测试文件**（位于 `tests/` 目录，需移到 `frontend/src/` 下运行）:",
                 ]
                 for f in js_tests:
                     lines.append(f"- `{f.relative_to(tests_dir.parent)}`")
@@ -1201,7 +1201,7 @@ class OutputManager:
             "",
             "查看完整报告：",
             "",
-            f"```bash",
+            "```bash",
             f"cat audits/{audit_files[0].name}",
             "```",
             "",
@@ -1500,7 +1500,11 @@ class OutputManager:
             method = c.get("method", "GET")
             endpoint = c.get("endpoint", "/")
             if method.upper() in ("POST", "PUT"):
-                return f"-X {method.upper()} http://127.0.0.1:5000{endpoint} -H 'Content-Type: application/json' -d '{{\"key\":\"value\"}}'"
+                return (
+                    f"-X {method.upper()} http://127.0.0.1:5000{endpoint} "
+                    f"-H 'Content-Type: application/json' "
+                    f'-d \'{{"key":"value"}}\''
+                )
             else:
                 return f"http://127.0.0.1:5000{endpoint}"
         return None
@@ -1560,7 +1564,7 @@ class OutputManager:
             "",
             "## 执行结果",
             "",
-            f"```json",
+            "```json",
             json.dumps(result, ensure_ascii=False, indent=2),
             "```",
             "",

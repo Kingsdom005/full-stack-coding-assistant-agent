@@ -7,6 +7,7 @@ import json
 import re
 from datetime import datetime
 from typing import Dict, List
+
 from agents.base_agent import BaseAgent
 
 
@@ -122,7 +123,7 @@ class AuditAgent(BaseAgent):
     ) -> str:
         """将审计结果格式化为 Markdown 报告"""
         lines = [
-            f"# 代码审计报告",
+            "# 代码审计报告",
             "",
             f"- 审计时间: {datetime.now().isoformat()}",
             f"- 审计文件: {file_path}",

@@ -3,7 +3,9 @@
 """
 
 import os
+
 import pytest
+
 from utils.config_validator import ConfigValidator
 
 

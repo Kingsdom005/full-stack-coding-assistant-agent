@@ -3,20 +3,18 @@
 支持 Python 3.13+
 """
 
-import sys
 import argparse
 import signal
-import os
+import sys
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 from coordinator.coordinator import Coordinator
-from utils.config_validator import validate_config
-from utils.logger import info, error, debug, warning
-from utils.output_manager import OutputManager
 from utils.agent_selector import AgentSelector
+from utils.config_validator import validate_config
+from utils.logger import debug, error, info, warning
+from utils.output_manager import OutputManager
 from utils.pdf_reader import read_document
-
 
 # 退出命令集合
 EXIT_COMMANDS = {"exit", "quit", "bye", "q"}
@@ -391,8 +389,6 @@ def interactive_mode(
 
     _print_welcome()
 
-    is_first_run = True
-
     # 情况 1: 命令行已传入描述，先执行一次
     if first_description:
         info(f"[首次运行] 项目描述: {first_description}")
@@ -430,8 +426,6 @@ def interactive_mode(
         output_mgr.generate_readme(output_dir)
         info(f"  已生成执行说明: {output_dir / 'README.md'}")
 
-        is_first_run = False
-
     # 情况 2: 无参数启动，引导用户输入项目描述
     if output_dir is None:
         project_desc = _get_project_description()
@@ -466,8 +460,6 @@ def interactive_mode(
         # 自动生成 README.md
         output_mgr.generate_readme(output_dir)
         info(f"  已生成执行说明: {output_dir / 'README.md'}")
-
-        is_first_run = False
 
     # 进入主循环
     info("")
@@ -505,8 +497,8 @@ def interactive_mode(
             doc_text = _load_document_description(file_path)
             if doc_text is None:
                 continue
-            info(f"  文档已加载，接下来输入的需求将附带此文档内容。")
-            info(f"  请输入具体的开发需求（基于以上文档）：")
+            info("  文档已加载，接下来输入的需求将附带此文档内容。")
+            info("  请输入具体的开发需求（基于以上文档）：")
             user_input = _get_user_input("\n>>> ")
             if user_input is None or _is_exit_command(user_input.strip().lower()):
                 break
@@ -518,7 +510,7 @@ def interactive_mode(
             cmd = user_input.strip().lower()
 
         # 用户需求：智能选择 Agent 并执行
-        info(f"[1/3] 智能选择 Agent...")
+        info("[1/3] 智能选择 Agent...")
 
         # 收集已有代码摘要
         code_summary = ""
@@ -629,7 +621,6 @@ def main():
     selector = AgentSelector(coordinator.model_router)
 
     output_dir = None
-    is_iteration = False
     first_description = None
 
     # 合并 PDF + 文本描述
@@ -659,7 +650,6 @@ def main():
 
             info(f"  项目描述: {existing_context['meta'].get('task_description', '')}")
             info(f"  迭代次数: {existing_context['meta'].get('iteration_count', 0)}")
-            is_iteration = True
         except FileNotFoundError as e:
             error(str(e))
             sys.exit(1)

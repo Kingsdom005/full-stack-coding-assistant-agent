@@ -5,7 +5,8 @@
 
 import os
 import sys
-from typing import Dict, List, Tuple
+from typing import List, Tuple
+
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

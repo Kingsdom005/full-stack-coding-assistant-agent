@@ -58,6 +58,6 @@ else:
     print("WARNING: Could not find '## 🔄 CI/CD' insertion point")
 
 with open("/home/liyanqi/cbworkspace/README.md", "w", encoding="utf-8") as f:
-    f.writelines(lines())
+    f.writelines(lines)
 
 print("Done!")

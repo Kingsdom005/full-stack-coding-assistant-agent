@@ -1,0 +1,11 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203, F541
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .codebuddy,
+per-file-ignores =
+    tests/*: F401, F811
+    agents/*: F401

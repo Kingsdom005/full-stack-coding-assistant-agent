@@ -9,8 +9,8 @@ class TestImports:
     """验证所有模块可以正常导入（不触发 LLM 调用）"""
 
     def test_import_utils(self):
-        from utils.logger import info, debug, error, warning, get_logger, setup_logger
-        from utils.config_validator import validate_config, ConfigValidator
+        from utils.config_validator import ConfigValidator, validate_config
+        from utils.logger import debug, error, get_logger, info, setup_logger, warning
         from utils.output_manager import OutputManager
 
     def test_import_model_config(self):
@@ -19,10 +19,10 @@ class TestImports:
 
         os.environ.setdefault("TENCENT_API_KEY", "sk-mock-for-test")
         from model.config import (
-            MODEL_CONFIG,
             DATABASE_CONFIG,
-            TENCENT_API_KEY,
+            MODEL_CONFIG,
             TENCENT_API_BASE,
+            TENCENT_API_KEY,
         )
 
         assert isinstance(MODEL_CONFIG, dict)
@@ -52,8 +52,8 @@ class TestImports:
         import os
 
         os.environ.setdefault("TENCENT_API_KEY", "sk-mock-for-test")
-        from agents.base_agent import BaseAgent
+        from agents.audit_agent import AuditAgent
         from agents.backend_agent import BackendAgent
+        from agents.base_agent import BaseAgent
         from agents.frontend_agent import FrontendAgent
         from agents.test_agent import TestAgent
-        from agents.audit_agent import AuditAgent

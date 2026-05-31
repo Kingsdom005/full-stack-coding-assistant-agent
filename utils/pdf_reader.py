@@ -7,7 +7,7 @@ PDF 文档读取器 - 从 PDF 文件中提取文本内容作为项目描述
 
 import re
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 
 class PDFReader:

@@ -4,10 +4,10 @@ Agent 智能选择器 - 基于 LLM 分析用户需求，判断需要运行哪些
 
 import json
 import re
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from model.model_router import ModelRouter
-from utils.logger import info, warning, error
+from utils.logger import error, info, warning
 
 
 class AgentSelector:
@@ -177,7 +177,7 @@ class AgentSelector:
             warning(f"JSON 解析失败: {e}, 响应: {response[:200]}")
             return {
                 "agents": self.ALL_AGENTS,
-                "reason": f"JSON 解析失败，默认运行全部 Agent",
+                "reason": "JSON 解析失败，默认运行全部 Agent",
             }
 
     def _fix_dependencies(self, result: Dict) -> Dict:

@@ -4,8 +4,10 @@
 """
 
 import time
+from typing import Dict, Generator, List, Optional
+
 import litellm
-from typing import List, Dict, Optional, Generator
+
 from model.config import MODEL_CONFIG
 
 

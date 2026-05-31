@@ -3,11 +3,12 @@ CodeBuddy CLI 集成模块
 通过命令行调用 CodeBuddy CLI 执行代码操作
 """
 
-import subprocess
 import json
-import tempfile
 import os
-from typing import Dict, Optional, List
+import subprocess
+import tempfile
+from typing import Dict, List, Optional
+
 from model.config import CODEBUDDY_CONFIG
 
 
@@ -71,8 +72,6 @@ class CodeBuddyExecutor:
             执行结果
         """
         # 将代码写入临时文件
-        import tempfile
-
         with tempfile.NamedTemporaryFile(mode="w", suffix=".tmp", delete=False) as f:
             f.write(new_code)
             temp_path = f.name
@@ -83,8 +82,6 @@ class CodeBuddyExecutor:
         )
 
         # 清理临时文件
-        import os
-
         os.unlink(temp_path)
 
         return result
