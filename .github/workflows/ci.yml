@@ -26,6 +26,9 @@ jobs:
       - name: Install lint tools
         run: pip install black isort flake8
 
+      - name: Debug context_db.py content
+        run: sed -n '38,48p' storage/context_db.py || echo "File not found"
+
       - name: Check formatting (black)
         run: black --check --diff .
 
