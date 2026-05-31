@@ -24,10 +24,13 @@ jobs:
           python-version: "3.13"
 
       - name: Install lint tools
-        run: pip install black isort flake8
+        run: pip install black==25.1.0 isort==5.13.2 flake8==7.1.1
 
       - name: Debug context_db.py content
         run: sed -n '38,48p' storage/context_db.py || echo "File not found"
+
+      - name: Debug black version
+        run: black --version
 
       - name: Check formatting (black)
         run: black --check --diff .
