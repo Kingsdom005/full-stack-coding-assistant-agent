@@ -1,6 +1,7 @@
 """
 输出管理器单元测试
 """
+
 import json
 import tempfile
 import pytest
@@ -60,7 +61,9 @@ class TestOutputManager:
     def test_update_meta(self, output_mgr):
         """测试更新元数据"""
         output_dir = output_mgr.create_output_dir("测试项目")
-        output_mgr.update_meta(output_path=output_dir, status="completed", last_task_id="task_abc")
+        output_mgr.update_meta(
+            output_path=output_dir, status="completed", last_task_id="task_abc"
+        )
         meta_file = output_dir / ".meta.json"
         with open(meta_file, "r", encoding="utf-8") as f:
             meta = json.load(f)
@@ -71,8 +74,12 @@ class TestOutputManager:
         """测试加载已有输出目录"""
         output_dir = output_mgr.create_output_dir("测试项目")
         # Create some files to test loading
-        (output_dir / "backend" / "app.py").write_text("# backend code", encoding="utf-8")
-        (output_dir / "frontend" / "App.tsx").write_text("// frontend code", encoding="utf-8")
+        (output_dir / "backend" / "app.py").write_text(
+            "# backend code", encoding="utf-8"
+        )
+        (output_dir / "frontend" / "App.tsx").write_text(
+            "// frontend code", encoding="utf-8"
+        )
         result = output_mgr.load_output_dir(str(output_dir))
         assert "meta" in result
         assert "backend_code" in result
@@ -82,7 +89,9 @@ class TestOutputManager:
     def test_get_project_context(self, output_mgr):
         """测试获取项目上下文"""
         output_dir = output_mgr.create_output_dir("电商项目")
-        (output_dir / "backend" / "main.py").write_text("print('hello')", encoding="utf-8")
+        (output_dir / "backend" / "main.py").write_text(
+            "print('hello')", encoding="utf-8"
+        )
         context = output_mgr.get_project_context(output_dir)
         assert len(context) > 0
 

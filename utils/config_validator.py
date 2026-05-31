@@ -57,11 +57,10 @@ class ConfigValidator:
                 # 验证 API Key 格式
                 if env_name in cls.API_KEY_PATTERNS:
                     import re
+
                     pattern = cls.API_KEY_PATTERNS[env_name]
                     if not re.match(pattern, value):
-                        warnings.append(
-                            f"{env_name} 格式可能不正确（期望以 sk- 开头）"
-                        )
+                        warnings.append(f"{env_name} 格式可能不正确（期望以 sk- 开头）")
 
         # 检查可选的环境变量
         for env_name, default_value in cls.OPTIONAL_ENVS.items():

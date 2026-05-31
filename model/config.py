@@ -19,8 +19,7 @@ def get_env(key: str, default: str = "") -> str:
 # 从环境变量读取敏感配置
 TENCENT_API_KEY = get_env("TENCENT_API_KEY", "YOUR_TENCENT_API_KEY")
 TENCENT_API_BASE = get_env(
-    "TENCENT_API_BASE",
-    "https://api.hunyuan.cloud.tencent.com/v1"
+    "TENCENT_API_BASE", "https://api.hunyuan.cloud.tencent.com/v1"
 )
 SQLITE_DB_PATH = get_env("SQLITE_DB_PATH", "./context.db")
 CODEBUDDY_CLI_PATH = get_env("CODEBUDDY_CLI_PATH", "codebuddy")
@@ -29,29 +28,25 @@ CODEBUDDY_TIMEOUT = int(get_env("CODEBUDDY_TIMEOUT", "60"))
 MODEL_CONFIG = {
     # 默认模型（腾讯混元，OpenAI 兼容 API）
     "default": "openai/hunyuan-lite",
-
     # 各 Agent 专用模型配置
     "agents": {
-        "frontend": "openai/hunyuan-lite",      # 前端 Agent 使用轻量模型
-        "backend":  "openai/hunyuan-standard",   # 后端 Agent 使用标准模型
-        "test":     "openai/hunyuan-lite",       # 测试 Agent 使用轻量模型
-        "audit":    "openai/hunyuan-pro",        # 审计 Agent 使用专业模型
+        "frontend": "openai/hunyuan-lite",  # 前端 Agent 使用轻量模型
+        "backend": "openai/hunyuan-standard",  # 后端 Agent 使用标准模型
+        "test": "openai/hunyuan-lite",  # 测试 Agent 使用轻量模型
+        "audit": "openai/hunyuan-pro",  # 审计 Agent 使用专业模型
     },
-
     # 腾讯混元 API 配置（从环境变量读取）
     "tencent": {
         "api_base": TENCENT_API_BASE,
         "api_key": TENCENT_API_KEY,
     },
-
     # Fallback 链式降级策略
     "fallback_chain": ["openai/hunyuan-lite", "openai/hunyuan-standard"],
-
     # LiteLLM 通用参数
     "litellm_settings": {
         "timeout": 60,
         "max_retries": 2,
-    }
+    },
 }
 
 # 数据库配置

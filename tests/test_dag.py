@@ -1,6 +1,7 @@
 """
 DAG 调度器单元测试
 """
+
 import pytest
 from coordinator.dag import DAGScheduler
 
@@ -10,7 +11,9 @@ class TestDAGScheduler:
 
     def test_add_single_task(self):
         dag = DAGScheduler()
-        dag.add_task("task_1", agent_type="backend", dependencies=[], context={"desc": "test"})
+        dag.add_task(
+            "task_1", agent_type="backend", dependencies=[], context={"desc": "test"}
+        )
         assert "task_1" in dag.tasks
         assert dag.tasks["task_1"]["agent_type"] == "backend"
 
@@ -93,10 +96,18 @@ class TestDAGScheduler:
 
     def test_get_task_context(self):
         dag = DAGScheduler()
-        dag.add_task("task_a", agent_type="backend", dependencies=[],
-                     context={"desc": "backend task"})
-        dag.add_task("task_b", agent_type="frontend", dependencies=["task_a"],
-                     context={"desc": "frontend task"})
+        dag.add_task(
+            "task_a",
+            agent_type="backend",
+            dependencies=[],
+            context={"desc": "backend task"},
+        )
+        dag.add_task(
+            "task_b",
+            agent_type="frontend",
+            dependencies=["task_a"],
+            context={"desc": "frontend task"},
+        )
         dag.tasks["task_a"]["result"] = {"status": "success", "files": ["api.py"]}
         dag.mark_done("task_a")
         context = dag.get_task_context("task_b")

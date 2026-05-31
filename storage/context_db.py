@@ -28,9 +28,9 @@ class ContextDB:
         """获取数据库连接 (Python 3.13+ 优化)"""
         conn = sqlite3.connect(self.db_path)
         # Python 3.13+ 支持更多 SQLite pragma 设置
-        conn.execute("PRAGMA journal_mode=WAL")   # 提升并发性能
-        conn.execute("PRAGMA foreign_keys=ON")     # 启用外键约束
-        conn.execute("PRAGMA busy_timeout=5000")   # 5秒忙等待
+        conn.execute("PRAGMA journal_mode=WAL")  # 提升并发性能
+        conn.execute("PRAGMA foreign_keys=ON")  # 启用外键约束
+        conn.execute("PRAGMA busy_timeout=5000")  # 5秒忙等待
         return conn
 
     def _init_db(self):
@@ -39,7 +39,8 @@ class ContextDB:
         cursor = conn.cursor()
 
         # 创建 tables（如果不存在）
-        cursor.executescript("""
+        cursor.executescript(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 task_id TEXT UNIQUE NOT NULL,
@@ -91,7 +92,8 @@ class ContextDB:
             CREATE INDEX IF NOT EXISTS idx_code_changes_task_id ON code_changes(task_id);
             CREATE INDEX IF NOT EXISTS idx_api_contracts_task_id ON api_contracts(task_id);
             CREATE INDEX IF NOT EXISTS idx_audit_reports_task_id ON audit_reports(task_id);
-        """)
+        """
+        )
 
         conn.commit()
         conn.close()
@@ -104,7 +106,7 @@ class ContextDB:
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO tasks (task_id, description) VALUES (?, ?)",
-            (task_id, description)
+            (task_id, description),
         )
         task_pk = cursor.lastrowid
         conn.commit()
@@ -125,7 +127,7 @@ class ContextDB:
             """UPDATE tasks
                SET status = ?, result = ?, error = ?, updated_at = CURRENT_TIMESTAMP
                WHERE task_id = ?""",
-            (status, result, error, task_id)
+            (status, result, error, task_id),
         )
         conn.commit()
         conn.close()
@@ -139,8 +141,16 @@ class ContextDB:
         conn.close()
 
         if row:
-            columns = ["id", "task_id", "description", "status",
-                       "created_at", "updated_at", "result", "error"]
+            columns = [
+                "id",
+                "task_id",
+                "description",
+                "status",
+                "created_at",
+                "updated_at",
+                "result",
+                "error",
+            ]
             return dict(zip(columns, row))
         return None
 
@@ -161,7 +171,7 @@ class ContextDB:
             """INSERT INTO code_changes
                (task_id, agent_type, file_path, change_type, diff)
                VALUES (?, ?, ?, ?, ?)""",
-            (task_id, agent_type, file_path, change_type, diff)
+            (task_id, agent_type, file_path, change_type, diff),
         )
         conn.commit()
         conn.close()
@@ -191,7 +201,7 @@ class ContextDB:
                 json.dumps(request_schema) if request_schema else None,
                 json.dumps(response_schema) if response_schema else None,
                 created_by,
-            )
+            ),
         )
         conn.commit()
         conn.close()
@@ -200,16 +210,21 @@ class ContextDB:
         """获取任务的接口契约列表"""
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM api_contracts WHERE task_id = ?",
-            (task_id,)
-        )
+        cursor.execute("SELECT * FROM api_contracts WHERE task_id = ?", (task_id,))
         rows = cursor.fetchall()
         conn.close()
 
-        columns = ["id", "task_id", "endpoint", "method",
-                   "request_schema", "response_schema", "status",
-                   "created_by", "created_at"]
+        columns = [
+            "id",
+            "task_id",
+            "endpoint",
+            "method",
+            "request_schema",
+            "response_schema",
+            "status",
+            "created_by",
+            "created_at",
+        ]
         return [dict(zip(columns, row)) for row in rows]
 
     # ==================== Audit Reports 操作 ====================
@@ -230,7 +245,7 @@ class ContextDB:
             """INSERT INTO audit_reports
                (task_id, agent_type, severity, message, file_path, line_number)
                VALUES (?, ?, ?, ?, ?, ?)""",
-            (task_id, agent_type, severity, message, file_path, line_number)
+            (task_id, agent_type, severity, message, file_path, line_number),
         )
         conn.commit()
         conn.close()
@@ -241,11 +256,19 @@ class ContextDB:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT * FROM audit_reports WHERE task_id = ? ORDER BY severity",
-            (task_id,)
+            (task_id,),
         )
         rows = cursor.fetchall()
         conn.close()
 
-        columns = ["id", "task_id", "agent_type", "severity",
-                    "message", "file_path", "line_number", "created_at"]
+        columns = [
+            "id",
+            "task_id",
+            "agent_type",
+            "severity",
+            "message",
+            "file_path",
+            "line_number",
+            "created_at",
+        ]
         return [dict(zip(columns, row)) for row in rows]

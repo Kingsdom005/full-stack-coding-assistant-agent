@@ -78,14 +78,16 @@ class BaseAgent(ABC):
         # 记录 token 用量
         usage = result.get("usage", {})
         if usage:
-            self._usage_log.append({
-                "step": len(self._usage_log) + 1,
-                "model": result.get("model", self.model),
-                "prompt_tokens": usage.get("prompt_tokens", 0),
-                "completion_tokens": usage.get("completion_tokens", 0),
-                "total_tokens": usage.get("total_tokens", 0),
-                "latency_ms": result.get("latency_ms", 0),
-            })
+            self._usage_log.append(
+                {
+                    "step": len(self._usage_log) + 1,
+                    "model": result.get("model", self.model),
+                    "prompt_tokens": usage.get("prompt_tokens", 0),
+                    "completion_tokens": usage.get("completion_tokens", 0),
+                    "total_tokens": usage.get("total_tokens", 0),
+                    "latency_ms": result.get("latency_ms", 0),
+                }
+            )
 
         return result["content"]
 
@@ -258,10 +260,10 @@ class BaseAgent(ABC):
                 )
             parsed_lines.append("")
         if parsed_result.get("reports_count") is not None:
-            parsed_lines.append(f"- 发现问题数: {parsed_result.get('reports_count', 0)}")
             parsed_lines.append(
-                f"- 高危问题: {parsed_result.get('high_severity', 0)}"
+                f"- 发现问题数: {parsed_result.get('reports_count', 0)}"
             )
+            parsed_lines.append(f"- 高危问题: {parsed_result.get('high_severity', 0)}")
             parsed_lines.append("")
         if parsed_result.get("status"):
             parsed_lines.append(f"- 状态: {parsed_result['status']}")

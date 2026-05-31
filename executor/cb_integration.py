@@ -72,6 +72,7 @@ class CodeBuddyExecutor:
         """
         # 将代码写入临时文件
         import tempfile
+
         with tempfile.NamedTemporaryFile(mode="w", suffix=".tmp", delete=False) as f:
             f.write(new_code)
             temp_path = f.name
@@ -83,6 +84,7 @@ class CodeBuddyExecutor:
 
         # 清理临时文件
         import os
+
         os.unlink(temp_path)
 
         return result

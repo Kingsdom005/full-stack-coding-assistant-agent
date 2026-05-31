@@ -98,7 +98,9 @@ class Coordinator:
         # 收集已有代码上下文（从 output_dir 读取）
         if self.output_dir is not None:
             base_context["existing_backend_code"] = self._read_generated_code("backend")
-            base_context["existing_frontend_code"] = self._read_generated_code("frontend")
+            base_context["existing_frontend_code"] = self._read_generated_code(
+                "frontend"
+            )
             base_context["existing_test_code"] = self._read_generated_code("tests")
 
         created_tasks: Dict[str, str] = {}  # suffix -> task_id
@@ -284,6 +286,7 @@ class Coordinator:
                 except Exception as e:
                     import traceback
                     from utils.logger import error as log_error
+
                     error_detail = traceback.format_exc()
                     log_error(f"任务 [{task_id}] 执行失败 (agent={agent_type}): {e}")
                     log_error(f"详细堆栈:\n{error_detail}")
@@ -293,10 +296,15 @@ class Coordinator:
                     for tid, info in self.dag.tasks.items():
                         if self.dag.status.get(tid) == "failed" and tid != task_id:
                             self.db.update_task_status(
-                                tid, "failed",
-                                error=f"上游任务 {task_id} 失败，本级联取消"
+                                tid,
+                                "failed",
+                                error=f"上游任务 {task_id} 失败，本级联取消",
                             )
-                    results[task_id] = {"status": "failed", "error": str(e), "traceback": error_detail}
+                    results[task_id] = {
+                        "status": "failed",
+                        "error": str(e),
+                        "traceback": error_detail,
+                    }
 
         # 收集并汇总所有 Agent 的 token 用量
         usage_summary = self._collect_usage_summary()
@@ -325,12 +333,15 @@ class Coordinator:
             return
 
         from utils.logger import info as log_info
+
         total_tokens = sum(s["total_tokens"] for s in summaries)
         total_latency = sum(s["total_latency_ms"] for s in summaries)
 
         log_info("=" * 72)
         log_info("📊 Token 用量汇总")
-        log_info(f"{'Agent':<12} {'Steps':<8} {'Prompt':<12} {'Completion':<14} {'Total':<12} {'耗时(ms)'}")
+        log_info(
+            f"{'Agent':<12} {'Steps':<8} {'Prompt':<12} {'Completion':<14} {'Total':<12} {'耗时(ms)'}"
+        )
         log_info("-" * 72)
         for s in summaries:
             log_info(
@@ -342,7 +353,9 @@ class Coordinator:
                 f"{s['total_latency_ms']:.0f}"
             )
         log_info("-" * 72)
-        log_info(f"{'合计':<12} {'—':<8} {'—':<12} {'—':<14} {total_tokens:<12,} {total_latency:.0f}")
+        log_info(
+            f"{'合计':<12} {'—':<8} {'—':<12} {'—':<14} {total_tokens:<12,} {total_latency:.0f}"
+        )
         log_info("=" * 72)
 
     def _save_usage_summary(self, summaries: List[Dict]):

@@ -1,6 +1,7 @@
 """
 配置验证器单元测试
 """
+
 import os
 import pytest
 from utils.config_validator import ConfigValidator
@@ -51,11 +52,13 @@ class TestValidateConfigFunction:
     def test_validate_config_success(self, monkeypatch):
         monkeypatch.setenv("TENCENT_API_KEY", "sk-test-key")
         from utils.config_validator import validate_config
+
         result = validate_config(exit_on_error=False)
         assert result is True
 
     def test_validate_config_failure(self, monkeypatch):
         monkeypatch.delenv("TENCENT_API_KEY", raising=False)
         from utils.config_validator import validate_config
+
         result = validate_config(exit_on_error=False)
         assert result is False

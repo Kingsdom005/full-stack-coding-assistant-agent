@@ -81,6 +81,7 @@ class DAGScheduler:
     def _cascade_failure(self, task_id: str):
         """递归标记所有下游任务为失败（BFS 遍历）"""
         from collections import deque
+
         queue = deque([task_id])
         while queue:
             current = queue.popleft()
@@ -92,8 +93,7 @@ class DAGScheduler:
     def is_completed(self) -> bool:
         """检查所有任务是否已完成"""
         return all(
-            self.status[task_id] in ("completed", "failed")
-            for task_id in self.tasks
+            self.status[task_id] in ("completed", "failed") for task_id in self.tasks
         )
 
     def get_task_context(self, task_id: str) -> Dict:

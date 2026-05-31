@@ -38,9 +38,7 @@ class PDFReader:
         try:
             from PyPDF2 import PdfReader
         except ImportError:
-            raise ImportError(
-                "需要安装 PyPDF2: pip install PyPDF2"
-            )
+            raise ImportError("需要安装 PyPDF2: pip install PyPDF2")
 
         reader = PdfReader(str(path))
         pages = []
@@ -92,7 +90,9 @@ class PDFReader:
         # 移除行尾多余空格
         text = re.sub(r"[ \t]+$", "", text, flags=re.MULTILINE)
         # 移除页码模式（如 "Page 1 of 10" 或 "- 1 -"）
-        text = re.sub(r"\n\s*(?:Page\s+\d+\s+of\s+\d+|[-\s]*\d+[-\s]*)\s*\n", "\n", text)
+        text = re.sub(
+            r"\n\s*(?:Page\s+\d+\s+of\s+\d+|[-\s]*\d+[-\s]*)\s*\n", "\n", text
+        )
         return text.strip()
 
 

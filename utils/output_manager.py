@@ -304,10 +304,10 @@ class OutputManager:
                 )
             parsed_lines.append("")
         if parsed_result.get("reports_count") is not None:
-            parsed_lines.append(f"- 发现问题数: {parsed_result.get('reports_count', 0)}")
             parsed_lines.append(
-                f"- 高危问题: {parsed_result.get('high_severity', 0)}"
+                f"- 发现问题数: {parsed_result.get('reports_count', 0)}"
             )
+            parsed_lines.append(f"- 高危问题: {parsed_result.get('high_severity', 0)}")
             parsed_lines.append("")
         if parsed_result.get("status"):
             parsed_lines.append(f"- 状态: {parsed_result['status']}")
@@ -522,11 +522,15 @@ class OutputManager:
                 stack["backend_framework"] = self._detect_py_framework(backend_dir)
                 stack["backend_entry"] = self._detect_entry_file(backend_dir, [".py"])
             else:
-                js_files = list(backend_dir.rglob("*.js")) + list(backend_dir.rglob("*.ts"))
+                js_files = list(backend_dir.rglob("*.js")) + list(
+                    backend_dir.rglob("*.ts")
+                )
                 if js_files:
                     stack["has_backend"] = True
                     stack["backend_lang"] = "node"
-                    stack["backend_entry"] = self._detect_entry_file(backend_dir, [".js", ".ts"])
+                    stack["backend_entry"] = self._detect_entry_file(
+                        backend_dir, [".js", ".ts"]
+                    )
 
         # 检测前端——有 package.json 或有源码文件都算有前端
         frontend_dir = output_path / "frontend"
@@ -534,11 +538,11 @@ class OutputManager:
             pkg_json = frontend_dir / "package.json"
             has_config = pkg_json.exists()
             has_source = bool(
-                list(frontend_dir.rglob("*.tsx")) +
-                list(frontend_dir.rglob("*.ts")) +
-                list(frontend_dir.rglob("*.jsx")) +
-                list(frontend_dir.rglob("*.js")) +
-                list(frontend_dir.rglob("*.html"))
+                list(frontend_dir.rglob("*.tsx"))
+                + list(frontend_dir.rglob("*.ts"))
+                + list(frontend_dir.rglob("*.jsx"))
+                + list(frontend_dir.rglob("*.js"))
+                + list(frontend_dir.rglob("*.html"))
             )
 
             if has_config or has_source:
@@ -603,9 +607,17 @@ class OutputManager:
                 content = f.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 continue
-            if "from flask" in content or "import flask" in content or "Flask(" in content:
+            if (
+                "from flask" in content
+                or "import flask" in content
+                or "Flask(" in content
+            ):
                 return "Flask"
-            if "from fastapi" in content or "import fastapi" in content or "FastAPI(" in content:
+            if (
+                "from fastapi" in content
+                or "import fastapi" in content
+                or "FastAPI(" in content
+            ):
                 return "FastAPI"
             if "from django" in content or "import django" in content:
                 return "Django"
@@ -616,6 +628,7 @@ class OutputManager:
         """从 package.json 检测前端框架"""
         try:
             import json
+
             data = json.loads(pkg_json.read_text(encoding="utf-8"))
             deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
             if "react" in deps:
@@ -650,7 +663,9 @@ class OutputManager:
     #  自动补充缺失的工程配置文件
     # ---------------------------------------------------------------- #
 
-    def _auto_generate_missing_configs(self, output_path: Path, stack: Dict) -> List[str]:
+    def _auto_generate_missing_configs(
+        self, output_path: Path, stack: Dict
+    ) -> List[str]:
         """
         检查并自动生成缺失的工程配置文件。
 
@@ -676,8 +691,9 @@ class OutputManager:
                 generated.append("frontend/tsconfig.json")
 
             # 检查是否有 src/index.tsx 作为入口
-            has_entry = (frontend_dir / "src" / "index.tsx").exists() or \
-                        (frontend_dir / "index.tsx").exists()
+            has_entry = (frontend_dir / "src" / "index.tsx").exists() or (
+                frontend_dir / "index.tsx"
+            ).exists()
             public_html = frontend_dir / "public" / "index.html"
             if has_entry and not public_html.exists():
                 self._generate_template_html(frontend_dir)
@@ -732,7 +748,11 @@ class OutputManager:
             },
             "browserslist": {
                 "production": [">0.2%", "not dead", "not op_mini all"],
-                "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"],
+                "development": [
+                    "last 1 chrome version",
+                    "last 1 firefox version",
+                    "last 1 safari version",
+                ],
             },
             "homepage": ".",
         }
@@ -760,6 +780,7 @@ class OutputManager:
     def _generate_template_tsconfig_json(frontend_dir: Path):
         """生成 TypeScript 配置模板"""
         import json
+
         tsconfig = {
             "compilerOptions": {
                 "target": "ES2020",
@@ -855,15 +876,19 @@ class OutputManager:
             lines.append("| 执行追溯 | Agent I/O | `traces/` |")
         return lines
 
-    def _build_tree(self, path: Path, prefix: str = "", max_depth: int = 3, _depth: int = 0) -> List[str]:
+    def _build_tree(
+        self, path: Path, prefix: str = "", max_depth: int = 3, _depth: int = 0
+    ) -> List[str]:
         """生成目录树"""
         if _depth >= max_depth:
             return []
         lines = []
-        entries = sorted([e for e in path.iterdir() if not e.name.startswith(".")],
-                         key=lambda e: (e.is_file(), e.name))
+        entries = sorted(
+            [e for e in path.iterdir() if not e.name.startswith(".")],
+            key=lambda e: (e.is_file(), e.name),
+        )
         for i, entry in enumerate(entries):
-            is_last = (i == len(entries) - 1)
+            is_last = i == len(entries) - 1
             connector = "└── " if is_last else "├── "
             if entry.is_dir():
                 lines.append(f"{prefix}{connector}{entry.name}/")
@@ -1100,15 +1125,20 @@ class OutputManager:
 
         # 前端测试——搜索 tests/ 和 frontend/src/ 两个目录
         frontend_test_candidates = (
-            list(tests_dir.rglob("*.tsx")) + list(tests_dir.rglob("*.ts")) +
-            list(tests_dir.rglob("*.jsx")) + list(tests_dir.rglob("*.js"))
+            list(tests_dir.rglob("*.tsx"))
+            + list(tests_dir.rglob("*.ts"))
+            + list(tests_dir.rglob("*.jsx"))
+            + list(tests_dir.rglob("*.js"))
         )
         frontend_dir = output_path / "frontend"
         if frontend_dir.exists():
             frontend_test_candidates += (
-                list(frontend_dir.rglob("*.test.tsx")) + list(frontend_dir.rglob("*.test.ts")) +
-                list(frontend_dir.rglob("*.test.jsx")) + list(frontend_dir.rglob("*.test.js")) +
-                list(frontend_dir.rglob("*.spec.tsx")) + list(frontend_dir.rglob("*.spec.ts"))
+                list(frontend_dir.rglob("*.test.tsx"))
+                + list(frontend_dir.rglob("*.test.ts"))
+                + list(frontend_dir.rglob("*.test.jsx"))
+                + list(frontend_dir.rglob("*.test.js"))
+                + list(frontend_dir.rglob("*.spec.tsx"))
+                + list(frontend_dir.rglob("*.spec.ts"))
             )
         js_tests = [f for f in frontend_test_candidates if f.suffix != ".py"]
         if js_tests:
@@ -1162,6 +1192,7 @@ class OutputManager:
             content = af.read_text(encoding="utf-8", errors="replace")
             # 提取发现的问题数
             import re as _re
+
             count_match = _re.search(r"发现问题数[：:]\s*(\d+)", content)
             issue_count = count_match.group(1) if count_match else "?"
             lines.append(f"- [{af.name}](audits/{af.name}) — 发现 {issue_count} 个问题")
@@ -1200,7 +1231,9 @@ class OutputManager:
             if sub.is_dir():
                 count = len(list(sub.glob("*.md")))
                 if count > 0:
-                    lines.append(f"cat traces/{sub.name}/*.md   # {count} 个 trace 文件")
+                    lines.append(
+                        f"cat traces/{sub.name}/*.md   # {count} 个 trace 文件"
+                    )
         lines += [
             "```",
             "",
@@ -1228,7 +1261,9 @@ class OutputManager:
                 lines.append(f"| API 验证 | `curl {api_info}` | 返回 200 |")
 
         if stack["has_frontend"] and frontend_pkg:
-            lines.append(f"| 前端启动 | `cd frontend && {stack['frontend_pkg_mgr']} start` | 页面可访问 |")
+            lines.append(
+                f"| 前端启动 | `cd frontend && {stack['frontend_pkg_mgr']} start` | 页面可访问 |"
+            )
         elif stack["has_frontend"]:
             lines.append("| 前端初始化 | 参见「运行前端」章节补充配置文件 | — |")
 
@@ -1236,7 +1271,9 @@ class OutputManager:
             lines.append("| 后端测试 | `python -m pytest tests/ -v` | 全部通过 |")
 
         if stack["has_tests"] and stack["test_frontend_framework"] and frontend_pkg:
-            lines.append(f"| 前端测试 | `cd frontend && {stack['frontend_pkg_mgr']} test` | 全部通过 |")
+            lines.append(
+                f"| 前端测试 | `cd frontend && {stack['frontend_pkg_mgr']} test` | 全部通过 |"
+            )
 
         if stack["has_audits"]:
             lines.append("| 查看审计 | `cat audits/*.md` | 含问题清单 |")
@@ -1247,7 +1284,9 @@ class OutputManager:
         lines.append("")
 
         # 端到端启动（仅当配置文件齐全时提供脚本）
-        can_start_frontend = stack["has_frontend"] and frontend_pkg and stack.get("frontend_framework")
+        can_start_frontend = (
+            stack["has_frontend"] and frontend_pkg and stack.get("frontend_framework")
+        )
         if stack["has_backend"] or can_start_frontend:
             lines += [
                 "---",
@@ -1339,6 +1378,7 @@ class OutputManager:
                 continue
             # 匹配 API_CONTRACT_START ... API_CONTRACT_END 块
             import re as _re
+
             pattern = r"###\s*API_CONTRACT_START\s*\n(.*?)###\s*API_CONTRACT_END"
             for match in _re.finditer(pattern, content, _re.DOTALL):
                 block = match.group(1)
@@ -1365,16 +1405,15 @@ class OutputManager:
         body = "{}"
         if req_schema:
             import re as _re
+
             # 简单解析 {"key": "type"} 格式
             props = _re.findall(r'"(\w+)":\s*"(\w+)"', req_schema)
             if props:
                 body_parts = [f'"{k}": "{v}"' for k, v in props]
                 body = "{" + ", ".join(body_parts) + "}"
         if method.upper() in ("POST", "PUT", "PATCH"):
-            lines.append(
-                f"curl -X {method.upper()} http://127.0.0.1:5000{endpoint} \\"
-            )
-            lines.append(f"  -H \"Content-Type: application/json\" \\")
+            lines.append(f"curl -X {method.upper()} http://127.0.0.1:5000{endpoint} \\")
+            lines.append(f'  -H "Content-Type: application/json" \\')
             lines.append(f"  -d '{body}'")
         else:
             lines.append(f"curl http://127.0.0.1:5000{endpoint}")
@@ -1389,6 +1428,7 @@ class OutputManager:
         except Exception:
             return "—"
         import re as _re
+
         names = _re.findall(r"def (test_\w+)", content)
         if names:
             return f"{len(names)} 个用例: {', '.join(names[:5])}" + (
@@ -1405,6 +1445,7 @@ class OutputManager:
 
         try:
             import json
+
             data = json.loads(pkg_json.read_text(encoding="utf-8"))
             declared = set(data.get("dependencies", {}).keys()) | set(
                 data.get("devDependencies", {}).keys()
@@ -1441,8 +1482,12 @@ class OutputManager:
             for ic, pkg in import_to_pkg.items():
                 if pkg in declared:
                     continue
-                if f"from '{ic}'" in content or f'from "{ic}"' in content or \
-                   f"require('{ic}')" in content or f'require("{ic}")' in content:
+                if (
+                    f"from '{ic}'" in content
+                    or f'from "{ic}"' in content
+                    or f"require('{ic}')" in content
+                    or f'require("{ic}")' in content
+                ):
                     missing.add(pkg)
         return sorted(missing)
 

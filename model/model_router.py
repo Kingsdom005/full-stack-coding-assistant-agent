@@ -84,6 +84,7 @@ class ModelRouter:
             }
         except Exception as e:
             import logging
+
             logger = logging.getLogger("coding_agent")
             logger.error(f"LLM 调用失败 (model={model}): {e}")
             # Fallback 策略
@@ -108,7 +109,9 @@ class ModelRouter:
                     except Exception as fe:
                         logger.warning(f"Fallback 模型 {fallback_model} 也失败: {fe}")
                         continue
-            raise RuntimeError(f"所有模型调用失败 (model={model}, fallback={self.fallback_chain}): {str(e)}")
+            raise RuntimeError(
+                f"所有模型调用失败 (model={model}, fallback={self.fallback_chain}): {str(e)}"
+            )
 
     def stream_chat(
         self,

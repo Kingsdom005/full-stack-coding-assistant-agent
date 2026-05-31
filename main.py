@@ -85,6 +85,7 @@ def _print_project_status(output_dir: Optional[Path]):
     meta_file = output_dir / ".meta.json"
     if meta_file.exists():
         import json
+
         meta = json.loads(meta_file.read_text(encoding="utf-8"))
         info(f"项目描述: {meta.get('task_description', 'N/A')}")
         info(f"创建时间: {meta.get('created_at', 'N/A')}")
@@ -110,7 +111,9 @@ def _print_project_status(output_dir: Optional[Path]):
     if traces_dir.exists():
         trace_count = sum(1 for _ in traces_dir.rglob("*.md"))
         if trace_count > 0:
-            info(f"  traces: {trace_count} 个审计 trace 文件（Agent 每一步的输入输出记录）")
+            info(
+                f"  traces: {trace_count} 个审计 trace 文件（Agent 每一步的输入输出记录）"
+            )
 
     info("")
 
@@ -303,7 +306,11 @@ def _run_task(
                 prompt=description + (" " + requirements if requirements else ""),
                 result={
                     "task_id": main_task_id,
-                    "results": {k: v.get("status") for k, v in results.items() if not k.startswith("_")},
+                    "results": {
+                        k: v.get("status")
+                        for k, v in results.items()
+                        if not k.startswith("_")
+                    },
                 },
             )
             # 更新元数据
@@ -596,12 +603,8 @@ def main():
     parser.add_argument(
         "description", nargs="?", help="项目描述（可选，可与 --pdf 组合使用）"
     )
-    parser.add_argument(
-        "-r", "--requirements", default="", help="详细需求"
-    )
-    parser.add_argument(
-        "-p", "--pdf", dest="pdf_path", help="PDF 需求文档路径"
-    )
+    parser.add_argument("-r", "--requirements", default="", help="详细需求")
+    parser.add_argument("-p", "--pdf", dest="pdf_path", help="PDF 需求文档路径")
     parser.add_argument(
         "-c",
         "--continue",
