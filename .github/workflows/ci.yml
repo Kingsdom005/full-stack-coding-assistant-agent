@@ -13,6 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug git info
+        run: |
+          git log --oneline -3
+          git rev-parse HEAD
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
