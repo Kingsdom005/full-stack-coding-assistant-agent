@@ -32,6 +32,20 @@ jobs:
       - name: Debug black version
         run: black --version
 
+      - name: Validate VERSION file
+        run: |
+          if [ ! -f VERSION ]; then
+            echo "❌ VERSION 文件不存在"
+            exit 1
+          fi
+          VERSION_CONTENT=$(cat VERSION | tr -d '\n')
+          if [[ ! "$VERSION_CONTENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$ ]]; then
+            echo "❌ VERSION 文件格式错误: $VERSION_CONTENT"
+            echo "   应为语义化版本格式（如 0.1.0）"
+            exit 1
+          fi
+          echo "✅ VERSION 文件格式正确: $VERSION_CONTENT"
+
       - name: Check formatting (black)
         run: |
           black --check --diff . || (echo "BLACK FORMATING FAILED, RUNNING BLACK..." && black . && git --no-pager diff && exit 1)

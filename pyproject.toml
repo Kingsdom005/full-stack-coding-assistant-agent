@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "full-stack-coding-assistant-agent"
-version = "0.1.0"
+dynamic = ["version"]
 description = "企业级全栈代码助手智能体 - 多智能体协作架构"
 readme = "README.md"
 requires-python = ">=3.11, <3.15"
@@ -12,11 +12,38 @@ license = {text = "MIT"}
 authors = [
     {name = "Your Name", email = "your.email@example.com"},
 ]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
 dependencies = [
     "litellm>=1.0.0",
     "python-dotenv>=1.0.0",
     "pyyaml>=6.0",
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = ["ai", "agent", "coding-assistant", "multi-agent", "llm", "code-generation"]
+
+[project.scripts]
+fscaa = "full_stack_coding_assistant_agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Kingsdom005/full-stack-coding-assistant-agent"
+Repository = "https://github.com/Kingsdom005/full-stack-coding-assistant-agent"
+"Issue Tracker" = "https://github.com/Kingsdom005/full-stack-coding-assistant-agent/issues"
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
 
 [project.optional-dependencies]
 dev = [
@@ -30,7 +57,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agents*", "coordinator*", "model*", "storage*", "executor*", "utils*"]
+include = ["agents*", "coordinator*", "model*", "storage*", "executor*", "utils*", "full_stack_coding_assistant_agent*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

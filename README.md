@@ -30,6 +30,37 @@ conda activate coding-agent
 
 ---
 
+## 📦 安装
+
+### 方法 1: 使用 pip 安装（推荐）
+
+```bash
+# 安装最新稳定版本
+pip install full-stack-coding-assistant-agent
+
+# 安装指定版本
+pip install full-stack-coding-assistant-agent==0.1.0
+
+# 安装预发布版本
+pip install --pre full-stack-coding-assistant-agent
+```
+
+安装后，可以使用 `fscaa` 命令启动工具：
+
+```bash
+fscaa "开发一个用户登录功能"
+```
+
+### 方法 2: 从源码安装
+
+```bash
+git clone git@github.com:Kingsdom005/full-stack-coding-assistant-agent.git
+cd full-stack-coding-assistant-agent
+pip install -e ".[dev]"
+```
+
+---
+
 ## 架构概述
 
 本项目实现了一个基于多智能体架构的企业级全栈代码助手，包含以下核心组件：
@@ -49,32 +80,42 @@ conda activate coding-agent
 ## 项目结构
 
 ```
-multi_agent_coding_assistant/
-├── coordinator/          # 协调器和调度器
-│   ├── coordinator.py   # 主协调器
-│   └── dag.py          # DAG 任务调度器
-├── agents/              # 智能体模块
-│   ├── base_agent.py    # Agent 基类
-│   ├── frontend_agent.py
-│   ├── backend_agent.py
-│   ├── test_agent.py
-│   └── audit_agent.py
-├── model/               # 模型路由
-│   ├── model_router.py  # LiteLLM 封装
-│   └── config.py        # 模型配置
-├── storage/             # 数据存储
-│   ├── context_db.py    # SQLite 操作封装
-│   └── schema.sql       # 数据库表结构
-├── executor/            # 代码执行器
-│   └── cb_integration.py # CodeBuddy CLI 集成
-├── config.yaml          # 应用配置
-├── main.py             # 入口文件
-├── run.sh              # 运行脚本
-├── requirements.txt    # 依赖清单 (Python 3.13+)
-├── pyproject.toml     # 项目元数据
-├── .python-version     # Python 版本指定
-├── .env.example        # 环境变量模板
-└── .gitignore         # Git 忽略规则
+full-stack-coding-assistant-agent/
+├── full_stack_coding_assistant_agent/  # Python 包
+│   ├── __init__.py                    # 包初始化
+│   ├── cli.py                         # CLI 入口
+│   ├── main.py                        # 主入口文件
+│   ├── coordinator/                   # 协调器和调度器
+│   │   ├── coordinator.py            # 主协调器
+│   │   └── dag.py                   # DAG 任务调度器
+│   ├── agents/                       # 智能体模块
+│   │   ├── base_agent.py             # Agent 基类
+│   │   ├── frontend_agent.py
+│   │   ├── backend_agent.py
+│   │   ├── test_agent.py
+│   │   └── audit_agent.py
+│   ├── model/                        # 模型路由
+│   │   ├── model_router.py           # LiteLLM 封装
+│   │   └── config.py                 # 模型配置
+│   ├── storage/                      # 数据存储
+│   │   ├── context_db.py             # SQLite 操作封装
+│   │   └── schema.sql                # 数据库表结构
+│   ├── executor/                     # 代码执行器
+│   │   └── cb_integration.py        # CodeBuddy CLI 集成
+│   └── utils/                        # 工具模块
+│       ├── version.py                # 版本管理工具
+│       └── ...
+├── .github/workflows/                # GitHub Actions 工作流
+│   ├── ci.yml                        # CI 工作流
+│   └── cd.yml                        # CD 工作流
+├── VERSION                           # 版本号文件
+├── CHANGELOG.md                      # 变更日志
+├── config.yaml                       # 应用配置
+├── run.sh                           # 运行脚本
+├── requirements.txt                  # 依赖清单
+├── pyproject.toml                    # 项目元数据
+├── .env.example                      # 环境变量模板
+└── README.md                         # 项目说明
 ```
 
 ## 🚀 快速开始
@@ -651,16 +692,52 @@ pytest --cov=agents --cov=coordinator --cov=model --cov=storage --cov-report=htm
 
 ## 🔄 CI/CD
 
-本项目使用 GitHub Actions 进行持续集成，工作流配置位于 `.github/workflows/ci.yml`。
+本项目使用 GitHub Actions 进行持续集成和持续部署，工作流配置位于 `.github/workflows/` 目录。
 
-### CI 流水线阶段
+### CI 流水线（`.github/workflows/ci.yml`）
 
 | 阶段 | 说明 | 触发条件 |
 |------|------|----------|
-| **Lint & Format** | black + isort + flake8 代码风格检查 | push / PR 到 main/master/develop |
+| **Lint & Format** | black + isort + flake8 代码风格检查，VERSION 文件格式校验 | push / PR 到 main/master/develop |
 | **Type Check** | mypy 静态类型检查 | push / PR 到 main/master/develop |
 | **Tests** | pytest 单元测试 (Python 3.11/3.12/3.13) | push / PR 到 main/master/develop |
 | **Build** | 构建验证 | 前三个阶段通过后 |
+
+### CD 流水线（`.github/workflows/cd.yml`）
+
+CD 流水线在推送 git tag（以 `v` 开头）或手动触发时执行：
+
+| 阶段 | 说明 | 触发条件 |
+|------|------|----------|
+| **Validate** | 校验 VERSION 文件格式、版本号一致性、CHANGELOG 条目 | git tag v* / 手动触发 |
+| **Build** | 构建 wheel 包，twine 检查 | Validate 通过后 |
+| **Publish to Test PyPI** | 发布到 Test PyPI（可选） | Build 通过后 |
+| **Publish to PyPI** | 发布到正式 PyPI | Build 通过后 |
+| **Create GitHub Release** | 创建 GitHub Release，附上 wheel 包 | 发布到 PyPI 后 |
+
+### 发布流程
+
+1. 更新 `CHANGELOG.md`，将 `[Unreleased]` 内容移动到新版本条目
+2. 更新 `VERSION` 文件：
+   ```bash
+   python utils/version.py --bump patch  # 升级 patch 版本（如 0.1.0 -> 0.1.1）
+   # 或
+   python utils/version.py --bump minor  # 升级 minor 版本（如 0.1.0 -> 0.2.0）
+   # 或
+   python utils/version.py --bump major  # 升级 major 版本（如 0.1.0 -> 1.0.0）
+   ```
+3. 提交版本更新：
+   ```bash
+   git add VERSION CHANGELOG.md
+   git commit -m "chore: release v0.1.1"
+   git push origin develop
+   ```
+4. 创建并推送 git tag：
+   ```bash
+   git tag v0.1.1
+   git push origin v0.1.1
+   ```
+5. GitHub Actions CD 工作流自动触发，发布到 PyPI
 
 ### 本地运行 CI 检查
 
@@ -676,6 +753,9 @@ mypy .
 
 # 运行测试
 TENCENT_API_KEY=sk-mock-key pytest tests/ -v
+
+# 校验版本号
+python utils/version.py --validate $(cat VERSION)
 ```
 
 > 注：CI 中的测试聚焦于纯逻辑模块（DAG 调度、输出管理、配置验证、模块导入），不依赖真实 LLM API 调用。
