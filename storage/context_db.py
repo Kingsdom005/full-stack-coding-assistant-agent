@@ -272,4 +272,3 @@ class ContextDB:
             "created_at",
         ]
         return [dict(zip(columns, row)) for row in rows]
-
