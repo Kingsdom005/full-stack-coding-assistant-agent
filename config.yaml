@@ -1,26 +1,55 @@
-# 全栈代码助手智能体配置
+# 全栈代码助手智能体 - 应用配置
+# Python 版本: 3.13+ (推荐 3.13.x 或 3.11.x)
 
 coordinator:
   max_retries: 3
   timeout_seconds: 300
+  max_concurrent_tasks: 10  # 最大并发任务数
 
 agents:
   frontend:
-    model: hunyuan-lite
+    model: openai/hunyuan-lite
     max_tokens: 4096
+    temperature: 0.3
+    timeout: 60
   backend:
-    model: hunyuan-standard
+    model: openai/hunyuan-standard
     max_tokens: 4096
+    temperature: 0.3
+    timeout: 60
   test:
-    model: hunyuan-lite
+    model: openai/hunyuan-lite
     max_tokens: 2048
+    temperature: 0.2
+    timeout: 60
   audit:
-    model: hunyuan-pro
+    model: openai/hunyuan-pro
     max_tokens: 2048
+    temperature: 0.1
+    timeout: 120
 
 database:
   path: "./context.db"
+  # Python 3.13+ 使用最新的 SQLite 驱动
+  pragmas:
+    journal_mode: "WAL"
+    foreign_keys: "ON"
+    busy_timeout: "5000"
 
 codebuddy:
   cli_path: "codebuddy"
   timeout: 60
+  # Python 3.13+ 兼容性设置
+  python_compatible_mode: true
+
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/app.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# Python 版本检查
+python:
+  min_version: "3.11"
+  recommended_version: "3.13"
+  allowed_versions: ["3.11", "3.12", "3.13", "3.14"]

@@ -1,28 +1,46 @@
 """
 SQLite 上下文数据库操作封装
 零部署方案 - 整个数据库是一个文件
+支持 Python 3.13+ 的最新 SQLite 特性
 """
 
-import sqlite3
 import json
-from typing import Optional, List, Dict
-from datetime import datetime
+import sqlite3
+from typing import Dict, List, Optional
+
+from model.config import DATABASE_CONFIG
 
 
 class ContextDB:
-    """SQLite 上下文数据库操作类"""
+    """SQLite 上下文数据库操作类 (Python 3.13+ 优化版)"""
 
-    def __init__(self, db_path: str = "./context.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        """
+        初始化数据库
+
+        Args:
+            db_path: 数据库路径，None 则使用配置文件中的默认值
+        """
+        self.db_path = db_path or DATABASE_CONFIG["path"]
         self._init_db()
+
+    def _get_connection(self):
+        """获取数据库连接 (Python 3.13+ 优化)"""
+        conn = sqlite3.connect(self.db_path)
+        # Python 3.13+ 支持更多 SQLite pragma 设置
+        conn.execute("PRAGMA journal_mode=WAL")  # 提升并发性能
+        conn.execute("PRAGMA foreign_keys=ON")  # 启用外键约束
+        conn.execute("PRAGMA busy_timeout=5000")  # 5秒忙等待
+        return conn
 
     def _init_db(self):
         """初始化数据库，执行 schema.sql"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
 
         # 创建 tables（如果不存在）
-        cursor.executescript("""
+        cursor.executescript(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 task_id TEXT UNIQUE NOT NULL,
@@ -74,7 +92,8 @@ class ContextDB:
             CREATE INDEX IF NOT EXISTS idx_code_changes_task_id ON code_changes(task_id);
             CREATE INDEX IF NOT EXISTS idx_api_contracts_task_id ON api_contracts(task_id);
             CREATE INDEX IF NOT EXISTS idx_audit_reports_task_id ON audit_reports(task_id);
-        """)
+        """
+        )
 
         conn.commit()
         conn.close()
@@ -83,11 +102,11 @@ class ContextDB:
 
     def create_task(self, task_id: str, description: str) -> int:
         """创建新任务"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO tasks (task_id, description) VALUES (?, ?)",
-            (task_id, description)
+            (task_id, description),
         )
         task_pk = cursor.lastrowid
         conn.commit()
@@ -102,28 +121,36 @@ class ContextDB:
         error: Optional[str] = None,
     ):
         """更新任务状态"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             """UPDATE tasks
                SET status = ?, result = ?, error = ?, updated_at = CURRENT_TIMESTAMP
                WHERE task_id = ?""",
-            (status, result, error, task_id)
+            (status, result, error, task_id),
         )
         conn.commit()
         conn.close()
 
     def get_task(self, task_id: str) -> Optional[Dict]:
         """获取任务详情"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tasks WHERE task_id = ?", (task_id,))
         row = cursor.fetchone()
         conn.close()
 
         if row:
-            columns = ["id", "task_id", "description", "status",
-                      "created_at", "updated_at", "result", "error"]
+            columns = [
+                "id",
+                "task_id",
+                "description",
+                "status",
+                "created_at",
+                "updated_at",
+                "result",
+                "error",
+            ]
             return dict(zip(columns, row))
         return None
 
@@ -138,13 +165,13 @@ class ContextDB:
         diff: Optional[str] = None,
     ):
         """记录代码变更"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             """INSERT INTO code_changes
                (task_id, agent_type, file_path, change_type, diff)
                VALUES (?, ?, ?, ?, ?)""",
-            (task_id, agent_type, file_path, change_type, diff)
+            (task_id, agent_type, file_path, change_type, diff),
         )
         conn.commit()
         conn.close()
@@ -161,7 +188,7 @@ class ContextDB:
         created_by: str = "backend",
     ):
         """保存前后端接口契约"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             """INSERT INTO api_contracts
@@ -174,25 +201,30 @@ class ContextDB:
                 json.dumps(request_schema) if request_schema else None,
                 json.dumps(response_schema) if response_schema else None,
                 created_by,
-            )
+            ),
         )
         conn.commit()
         conn.close()
 
     def get_api_contracts(self, task_id: str) -> List[Dict]:
         """获取任务的接口契约列表"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM api_contracts WHERE task_id = ?",
-            (task_id,)
-        )
+        cursor.execute("SELECT * FROM api_contracts WHERE task_id = ?", (task_id,))
         rows = cursor.fetchall()
         conn.close()
 
-        columns = ["id", "task_id", "endpoint", "method",
-                  "request_schema", "response_schema", "status",
-                  "created_by", "created_at"]
+        columns = [
+            "id",
+            "task_id",
+            "endpoint",
+            "method",
+            "request_schema",
+            "response_schema",
+            "status",
+            "created_by",
+            "created_at",
+        ]
         return [dict(zip(columns, row)) for row in rows]
 
     # ==================== Audit Reports 操作 ====================
@@ -207,28 +239,36 @@ class ContextDB:
         line_number: Optional[int] = None,
     ):
         """添加审计意见"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             """INSERT INTO audit_reports
                (task_id, agent_type, severity, message, file_path, line_number)
                VALUES (?, ?, ?, ?, ?, ?)""",
-            (task_id, agent_type, severity, message, file_path, line_number)
+            (task_id, agent_type, severity, message, file_path, line_number),
         )
         conn.commit()
         conn.close()
 
     def get_audit_reports(self, task_id: str) -> List[Dict]:
         """获取任务的审计报告"""
-        conn = sqlite3.connect(self.db_path)
+        conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             "SELECT * FROM audit_reports WHERE task_id = ? ORDER BY severity",
-            (task_id,)
+            (task_id,),
         )
         rows = cursor.fetchall()
         conn.close()
 
-        columns = ["id", "task_id", "agent_type", "severity",
-                  "message", "file_path", "line_number", "created_at"]
+        columns = [
+            "id",
+            "task_id",
+            "agent_type",
+            "severity",
+            "message",
+            "file_path",
+            "line_number",
+            "created_at",
+        ]
         return [dict(zip(columns, row)) for row in rows]

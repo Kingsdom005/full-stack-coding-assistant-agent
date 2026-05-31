@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "full-stack-coding-assistant-agent"
+dynamic = ["version"]
+description = "企业级全栈代码助手智能体 - 多智能体协作架构"
+readme = "README.md"
+requires-python = ">=3.11, <3.15"
+license = "MIT"
+authors = [
+    {name = "Kingsdom005", email = "liyanqi@example.com"},
+]
+maintainers = [
+    {name = "Kingsdom005", email = "liyanqi@example.com"},
+]
+dependencies = [
+    "litellm>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+keywords = ["ai", "agent", "coding-assistant", "multi-agent", "llm", "code-generation"]
+
+[project.scripts]
+fscaa = "full_stack_coding_assistant_agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Kingsdom005/full-stack-coding-assistant-agent"
+Repository = "https://github.com/Kingsdom005/full-stack-coding-assistant-agent"
+"Issue Tracker" = "https://github.com/Kingsdom005/full-stack-coding-assistant-agent/issues"
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agents*", "coordinator*", "model*", "storage*", "executor*", "utils*", "full_stack_coding_assistant_agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+minversion = "7.0"
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 88
+target-version = ['py311', 'py312', 'py313']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = false
+warn_unused_configs = true
+explicit_package_bases = true
+ignore_missing_imports = true
+check_untyped_defs = false
+disallow_untyped_defs = false
+no_any_return = false
+disable_error_code = ["no-any-return", "index", "assignment", "call-overload", "name-defined"]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = ["E203"]
+exclude = ["tests/"]
+per-file-ignores = [
+    "tests/*:F401",
+    "tests/*:F811",
+]
+
+
+[tool.coverage.run]
+source = ["."]
+omit = ["tests/*", ".codebuddy/*", "output/*", "dataset/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
