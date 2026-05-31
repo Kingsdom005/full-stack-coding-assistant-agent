@@ -13,11 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug git info
-        run: |
-          git log --oneline -3
-          git rev-parse HEAD
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -25,12 +20,6 @@ jobs:
 
       - name: Install lint tools
         run: pip install black==25.9.0 isort==5.13.2 flake8==7.1.1
-
-      - name: Debug context_db.py content
-        run: sed -n '38,48p' storage/context_db.py || echo "File not found"
-
-      - name: Debug black version
-        run: black --version
 
       - name: Validate VERSION file
         run: |
